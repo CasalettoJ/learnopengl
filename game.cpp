@@ -1,11 +1,52 @@
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "game.h"
 
 Game::Game(SDL_Window *window, SDL_GLContext context)
 {
     _window = window;
     _context = context;
+
+    // Create vertex buffer object that will bind to array buffer for vertices
+    glGenBuffers(1, &_vertextBufferObject);
+
+    // Create the VAO that will render the triangle vertices
+    glGenVertexArraysAPPLE(1, &_vertexArrayObject);
+    createVAO();
+
+    // Load and compile shaders
+    u_int _vertShaderId;
+    u_int _fragShaderId;
+    bool loadVert = loadShader("assets/shaders/basic.vert", &_vertShaderId, GL_VERTEX_SHADER);
+    bool loadFrag = loadShader("assets/shaders/basic.frag", &_fragShaderId, GL_FRAGMENT_SHADER);
+    if (!loadVert || !loadFrag)
+    {
+        std::cout << "Shader load failure." << std::endl;
+        _init = false;
+    }
+
+    // Create the shader program with the compiled shaders
+    _shaderProgram = glCreateProgram();
+    glAttachShader(_shaderProgram, _vertShaderId);
+    glAttachShader(_shaderProgram, _fragShaderId);
+    glLinkProgram(_shaderProgram);
+    // Error check the shader linking
+    int shaderSuccess;
+    char infoLog[512];
+    glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &shaderSuccess);
+    if (!shaderSuccess)
+    {
+        glGetProgramInfoLog(_shaderProgram, 512, nullptr, infoLog);
+        std::cout << "Failure linking shader program:" << std::endl << infoLog << std::endl;
+        _init = false;
+    }
+
+    // delete compiled shaders since they aren't needed after program linking
+    glDeleteShader(_vertShaderId);
+    glDeleteShader(_fragShaderId);
+    _init = true;
 }
 
 Game::~Game()
@@ -56,6 +97,81 @@ void Game::render()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Use the shaderProgram created on initialization for vertex/fragment shaders
+    glUseProgram(_shaderProgram);
+    // Use the VAO that buffers vertices to array buffer
+    glBindVertexArrayAPPLE(_vertexArrayObject);
+    // Draw the triangle
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
     // Draw OpenGL
     SDL_GL_SwapWindow(_window);
+}
+
+void Game::createVAO()
+{
+    glBindVertexArrayAPPLE(_vertexArrayObject);
+    // Bind the VBO to the ARRAY_BUFFER before buffering vertices data
+    glBindBuffer(GL_ARRAY_BUFFER, _vertextBufferObject);
+    // Buffer vertices into the _VBO using the bound ARRAY_BUFFER for the GPU
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VERTICES), VERTICES, GL_STATIC_DRAW);
+    /*
+     * Set up the single vertex attribute (aPos) in our vertex shader:
+     * (basic.vert)
+     * 
+     * in vec3 aPos
+     *      Represents a point in 3d space, normalized.
+     * location: 0
+     * 
+     *   ___________________________
+     *   |          VERTEX         |
+     *   ___________________________
+     *   |    32bits(4 bytes) x    |
+     *   |    32bits(4 bytes) y    |
+     *   |    32bits(4 bytes) z    | 
+     *   ___________________________
+     *   Stride: 12bytes
+     *   Offset: 0 (tightly packed)
+     * 
+    */
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0 );
+    // Enable the attribute at the location layout (0)
+    glEnableVertexAttribArray(0);
+    glBindVertexArrayAPPLE(0);
+}
+
+bool Game::loadShader(std::string filename, u_int *id, int shaderFlag)
+{
+    // Load Shader
+    std::ifstream shaderFile;
+    std::stringstream buffer;
+    shaderFile.open(filename);
+    if (!shaderFile)
+    {
+        std::cout << "Failed to open shader file." << std::endl;
+        return false;
+    }
+    buffer << shaderFile.rdbuf();
+
+    const char *shader = buffer.str().c_str();
+    buffer.clear();
+    shaderFile.close();
+
+    // Compile
+    *id = glCreateShader(shaderFlag);
+    glShaderSource(*id, 1, &shader, nullptr);
+    glCompileShader(*id);
+
+    // Error Check
+    int success;
+    char infoLog[512];
+    glGetShaderiv(*id, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(*id, 512, nullptr, infoLog);
+        std::cout << "Failed to compile shader with error:" << std::endl << infoLog << std::endl;
+        return false;
+    }
+
+    return true;
 }
