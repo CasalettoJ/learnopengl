@@ -2,7 +2,6 @@
 #define GAME_H
 
 #include <SDL2/SDL.h>
-#include <OpenGL/glu.h>
 #include <vector>
 
 const GLint WIDTH = 800, HEIGHT = 600;

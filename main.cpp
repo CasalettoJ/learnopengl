@@ -1,12 +1,11 @@
 
 
 #include <SDL2/SDL.h>
-#define GLEW_STATIC
-#include <GL/glew.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#include <OpenGL/glext.h>
-#include <SDL2/SDL_opengl.h>
+#ifdef _WIN32
+    #define GLEW_STATIC
+    #include <GL/glew.h>
+#endif
+#include <OpenGL/gl3.h>
 #include <iostream>
 #include "game.h"
 
@@ -38,6 +37,7 @@ int main()
         return EXIT_FAILURE;
     }
 
+#ifdef _WIN32
     glewExperimental = true;
     GLenum initResult = glewInit();
     if (GLEW_OK != initResult)
@@ -46,6 +46,7 @@ int main()
                   << glewGetErrorString(initResult) << std::endl;
         return EXIT_FAILURE;
     }
+#endif
     glViewport(0, 0, WIDTH, HEIGHT);
 
     // Print logging information on init

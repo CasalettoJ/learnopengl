@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
 #include "game.h"
 
 Game::Game(SDL_Window *window, SDL_GLContext context)
@@ -13,7 +15,7 @@ Game::Game(SDL_Window *window, SDL_GLContext context)
     glGenBuffers(1, &_vertextBufferObject);
 
     // Create the VAO that will render the triangle vertices
-    glGenVertexArraysAPPLE(1, &_vertexArrayObject);
+    glGenVertexArrays(1, &_vertexArrayObject);
     createVAO();
 
     // Load and compile shaders
@@ -96,11 +98,10 @@ void Game::render()
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
     // Use the shaderProgram created on initialization for vertex/fragment shaders
     glUseProgram(_shaderProgram);
     // Use the VAO that buffers vertices to array buffer
-    glBindVertexArrayAPPLE(_vertexArrayObject);
+    glBindVertexArray(_vertexArrayObject);
     // Draw the triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -110,7 +111,7 @@ void Game::render()
 
 void Game::createVAO()
 {
-    glBindVertexArrayAPPLE(_vertexArrayObject);
+    glBindVertexArray(_vertexArrayObject);
     // Bind the VBO to the ARRAY_BUFFER before buffering vertices data
     glBindBuffer(GL_ARRAY_BUFFER, _vertextBufferObject);
     // Buffer vertices into the _VBO using the bound ARRAY_BUFFER for the GPU
@@ -137,7 +138,7 @@ void Game::createVAO()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0 );
     // Enable the attribute at the location layout (0)
     glEnableVertexAttribArray(0);
-    glBindVertexArrayAPPLE(0);
+    glBindVertexArray(0);
 }
 
 bool Game::loadShader(std::string filename, u_int *id, int shaderFlag)
