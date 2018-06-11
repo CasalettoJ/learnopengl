@@ -48,7 +48,6 @@ Game::Game(SDL_Window *window, SDL_GLContext context)
     // delete compiled shaders since they aren't needed after program linking
     glDeleteShader(_vertShaderId);
     glDeleteShader(_fragShaderId);
-    _init = true;
 }
 
 Game::~Game()

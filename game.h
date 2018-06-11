@@ -32,7 +32,7 @@ private:
   u_int _vertextBufferObject;
   u_int _vertexArrayObject;
   u_int _shaderProgram;
-  bool _init;
+  bool _init = true;
 };
 
 #endif
