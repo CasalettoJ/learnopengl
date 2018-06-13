@@ -7,9 +7,15 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float VERTICES[] = 
 {
-  -0.5f, -0.5f, 0.0f,
-   0.5f, -0.5f, 0.0f,
-   0.0f, 0.5f, 0.0f
+   0.5f,  0.5f, 0.0f, // Top-Right
+   0.5f, -0.5f, 0.0f, // Bottom-Right
+  -0.5f, -0.5f, 0.0f, // Bottom-Left
+  -0.5f,  0.5f, 0.0f  // Top-Left
+};
+const u_int VERTEX_INDICES[] =
+{
+  0, 1, 3, // First Triangle
+  1, 2, 3  // Second Triangle
 };
 
 class Game
@@ -31,6 +37,7 @@ private:
   SDL_GLContext _context;
   u_int _vertextBufferObject;
   u_int _vertexArrayObject;
+  u_int _elementBufferObject;
   u_int _shaderProgram;
   bool _init = true;
 };

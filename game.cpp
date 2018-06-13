@@ -16,6 +16,9 @@ Game::Game(SDL_Window *window, SDL_GLContext context)
 
     // Create the VAO that will render the triangle vertices
     glGenVertexArrays(1, &_vertexArrayObject);
+
+    // Create the EBO that will render the rectangle from two sets of vertex indices
+    glGenBuffers(1, &_elementBufferObject);
     createVAO();
 
     // Load and compile shaders
@@ -102,7 +105,9 @@ void Game::render()
     // Use the VAO that buffers vertices to array buffer
     glBindVertexArray(_vertexArrayObject);
     // Draw the triangle
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // Unbind the VAO
+    glBindVertexArray(0);
 
     // Draw OpenGL
     SDL_GL_SwapWindow(_window);
@@ -111,10 +116,14 @@ void Game::render()
 void Game::createVAO()
 {
     glBindVertexArray(_vertexArrayObject);
-    // Bind the VBO to the ARRAY_BUFFER before buffering vertices data
+    // Bind the vertices to the ARRAY_BUFFER before buffering vertex data
     glBindBuffer(GL_ARRAY_BUFFER, _vertextBufferObject);
     // Buffer vertices into the _VBO using the bound ARRAY_BUFFER for the GPU
     glBufferData(GL_ARRAY_BUFFER, sizeof(VERTICES), VERTICES, GL_STATIC_DRAW);
+    // Bind and buffer the index array for opengl to determine which vertices to use in what order.
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _elementBufferObject);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(VERTEX_INDICES), VERTEX_INDICES, GL_STATIC_DRAW);
+    // Copy 
     /*
      * Set up the single vertex attribute (aPos) in our vertex shader:
      * (basic.vert)
