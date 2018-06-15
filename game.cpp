@@ -100,8 +100,15 @@ void Game::render()
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // Calculate the green value to feed to OurColor uniform
+    float timeValue = SDL_GetTicks() / 1000.0f;
+    float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+    int vertexColorLocation = glGetUniformLocation(_shaderProgram, "ourColor");
+
     // Use the shaderProgram created on initialization for vertex/fragment shaders
     glUseProgram(_shaderProgram);
+    glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
     // Use the VAO that buffers vertices to array buffer
     glBindVertexArray(_vertexArrayObject);
     // Draw the triangle
