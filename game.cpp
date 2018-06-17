@@ -101,14 +101,8 @@ void Game::render()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Calculate the green value to feed to OurColor uniform
-    float timeValue = SDL_GetTicks() / 1000.0f;
-    float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-    int vertexColorLocation = glGetUniformLocation(_shaderProgram, "ourColor");
-
     // Use the shaderProgram created on initialization for vertex/fragment shaders
     glUseProgram(_shaderProgram);
-    glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
     // Use the VAO that buffers vertices to array buffer
     glBindVertexArray(_vertexArrayObject);
     // Draw the triangle
@@ -139,20 +133,25 @@ void Game::createVAO()
      *      Represents a point in 3d space, normalized.
      * location: 0
      * 
-     *   ___________________________
-     *   |          VERTEX         |
-     *   ___________________________
-     *   |    32bits(4 bytes) x    |
-     *   |    32bits(4 bytes) y    |
-     *   |    32bits(4 bytes) z    | 
-     *   ___________________________
-     *   Stride: 12bytes
-     *   Offset: 0 (tightly packed)
+     * in vec3 aColor
+     *      Represents the color of the vertex
+     * location: 1
+     * 
+     *   __________     aPos (offset 0)     aColor (offset 1)
+     *   | VERTEX |     X | Y | Z               R | G | B
+     *   __________     12 bytes                12 bytes
+     *             
+     *                          Stride: 24bytes
      * 
     */
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0 );
-    // Enable the attribute at the location layout (0)
+   
+    //aPos
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    //aColor
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*(sizeof(float))));
+    glEnableVertexAttribArray(1);
+    // Unbding VAO
     glBindVertexArray(0);
 }
 
