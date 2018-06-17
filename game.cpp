@@ -127,7 +127,7 @@ void Game::createVAO()
     // Copy 
     /*
      * Set up the single vertex attribute (aPos) in our vertex shader:
-     * (basic.vert)
+     * BASIC.VERT
      * 
      * in vec3 aPos
      *      Represents a point in 3d space, normalized.
