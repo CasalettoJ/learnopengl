@@ -1,10 +1,13 @@
+#include <iostream>
+
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #ifdef _WIN32
     #define GLEW_STATIC
     #include <GL/glew.h>
 #endif
 #include <OpenGL/gl3.h>
-#include <iostream>
+
 #include "game.h"
 
 int main()
@@ -33,6 +36,13 @@ int main()
         std::cout << "Failure to create window" << std::endl
                   << SDL_GetError() << std::endl;
         return EXIT_FAILURE;
+    }
+
+    // Initialize SDL_image
+    if (!IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG))
+    {
+        std::cout << "SDL_image could not initialize:" << std::endl << IMG_GetError() << std::endl;
+		return EXIT_FAILURE;
     }
 
 #ifdef _WIN32
@@ -68,6 +78,7 @@ int main()
     }
     game->Run();
 
+    IMG_Quit();
     SDL_Quit();
     return EXIT_SUCCESS;
 }

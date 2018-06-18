@@ -1,10 +1,14 @@
-#include <SDL2/SDL.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include <SDL2/SDL.h>
 #include <OpenGL/gl3.h>
 #include <OpenGL/gl3ext.h>
+
 #include "game.h"
+#include "systems/shader/shader.h"
+#include "systems/media/texture.h"
 
 Game::Game(SDL_Window *window, SDL_GLContext context)
 {
@@ -19,38 +23,42 @@ Game::Game(SDL_Window *window, SDL_GLContext context)
 
     // Create the EBO that will render the rectangle from two sets of vertex indices
     glGenBuffers(1, &_elementBufferObject);
+
+    // Get the test texture
+    _textureId = CreateTextureFromFile("assets/textures/drake.png");
+    if (_textureId == 0)
+    {
+        _init = false;
+    }
+
+    // Compile and link the shaders into a test program
+    unsigned int vertShaderId = LoadShader("assets/shaders/basic.vert", GL_VERTEX_SHADER);
+    unsigned int fragShaderId = LoadShader("assets/shaders/basic.frag", GL_FRAGMENT_SHADER);
+    if (vertShaderId == 0 || fragShaderId == 0)
+    {
+        _init = false;
+    }
+
+    _shaderProgram = CreateProgram(vertShaderId, fragShaderId);
+    if (_shaderProgram == 0)
+    {
+        _init = false;
+    }
+
+    // Set up the VAO that will render the rectangle
     createVAO();
 
-    // Load and compile shaders
-    u_int _vertShaderId;
-    u_int _fragShaderId;
-    bool loadVert = loadShader("assets/shaders/basic.vert", &_vertShaderId, GL_VERTEX_SHADER);
-    bool loadFrag = loadShader("assets/shaders/basic.frag", &_fragShaderId, GL_FRAGMENT_SHADER);
-    if (!loadVert || !loadFrag)
-    {
-        std::cout << "Shader load failure." << std::endl;
-        _init = false;
-    }
-
-    // Create the shader program with the compiled shaders
-    _shaderProgram = glCreateProgram();
-    glAttachShader(_shaderProgram, _vertShaderId);
-    glAttachShader(_shaderProgram, _fragShaderId);
-    glLinkProgram(_shaderProgram);
-    // Error check the shader linking
-    int shaderSuccess;
-    char infoLog[512];
-    glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &shaderSuccess);
-    if (!shaderSuccess)
-    {
-        glGetProgramInfoLog(_shaderProgram, 512, nullptr, infoLog);
-        std::cout << "Failure linking shader program:" << std::endl << infoLog << std::endl;
-        _init = false;
-    }
+    // Set up the texture for the shader program's texture sampler.
+    glUseProgram(_shaderProgram);
+    glUniform1i(glGetUniformLocation(_textureId, "ourTexture"), 0);
 
     // delete compiled shaders since they aren't needed after program linking
-    glDeleteShader(_vertShaderId);
-    glDeleteShader(_fragShaderId);
+    glDeleteShader(vertShaderId);
+    glDeleteShader(fragShaderId);
+
+    // Enable blend mode for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 Game::~Game()
@@ -79,6 +87,8 @@ void Game::Run()
         update();
         render();
     }
+    glDeleteVertexArrays(1, &_vertexArrayObject);
+    glDeleteBuffers(1, &_vertextBufferObject);
 }
 
 bool Game::handleEvent(SDL_Event e)
@@ -103,6 +113,9 @@ void Game::render()
 
     // Use the shaderProgram created on initialization for vertex/fragment shaders
     glUseProgram(_shaderProgram);
+    // Use our test texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, _textureId);
     // Use the VAO that buffers vertices to array buffer
     glBindVertexArray(_vertexArrayObject);
     // Draw the triangle
@@ -129,64 +142,37 @@ void Game::createVAO()
      * Set up the single vertex attribute (aPos) in our vertex shader:
      * BASIC.VERT
      * 
-     * in vec3 aPos
-     *      Represents a point in 3d space, normalized.
+     * in vec2 aPos
+     *      Represents a point in 2d space.
      * location: 0
      * 
      * in vec3 aColor
-     *      Represents the color of the vertex
+     *      Represents a color for the vertex.
      * location: 1
      * 
-     *   __________     aPos (offset 0)     aColor (offset 1)
-     *   | VERTEX |     X | Y | Z               R | G | B
-     *   __________     12 bytes                12 bytes
+     * in vec2 aTexCoord
+     *      Coordinate mapping to supplied texture for vertex.
+     * location: 2
+     * 
+     *   __________     aPos (0)   aColor (1)   aTexCoord (2)
+     *   | VERTEX |     X | Y      R | G | B    S | T
+     *   __________     8 bytes    12 bytes     8 bytes
      *             
-     *                          Stride: 24bytes
+     *   Stride: 28 bytes ----------------------------------->
      * 
     */
    
     //aPos
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
     //aColor
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*(sizeof(float))));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(2*sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // //aTexCoord
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(5*sizeof(float)));
+    glEnableVertexAttribArray(2);
     // Unbding VAO
     glBindVertexArray(0);
-}
-
-bool Game::loadShader(std::string filename, u_int *id, int shaderFlag)
-{
-    // Load Shader
-    std::ifstream shaderFile;
-    std::stringstream buffer;
-    shaderFile.open(filename);
-    if (!shaderFile)
-    {
-        std::cout << "Failed to open shader file." << std::endl;
-        return false;
-    }
-    buffer << shaderFile.rdbuf();
-
-    const char *shader = buffer.str().c_str();
-    buffer.clear();
-    shaderFile.close();
-
-    // Compile
-    *id = glCreateShader(shaderFlag);
-    glShaderSource(*id, 1, &shader, nullptr);
-    glCompileShader(*id);
-
-    // Error Check
-    int success;
-    char infoLog[512];
-    glGetShaderiv(*id, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(*id, 512, nullptr, infoLog);
-        std::cout << "Failed to compile shader with error:" << std::endl << infoLog << std::endl;
-        return false;
-    }
-
-    return true;
 }

@@ -7,13 +7,13 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float VERTICES[] = 
 {
-  // Position (XYZ)      Color (RGB)
-   0.5f,  0.5f, 0.0f,    1.0f, 0.0f, 0.0f,   // Top-Right
-   0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,   // Bottom-Right
-  -0.5f, -0.5f, 0.0f,    0.0f, 0.0f, 1.0f,   // Bottom-Left
-  -0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 0.0f    // Top-Left
+  // Position (XY)      Color (RGB)    Texture Coords (ST)
+   0.5f,  0.5f,    1.0f, 0.0f, 0.0f,    1.0f, 1.0f,         // Top-Right
+   0.5f, -0.5f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,         // Bottom-Right
+  -0.5f, -0.5f,    0.0f, 0.0f, 1.0f,    0.0f, 0.0f,         // Bottom-Left
+  -0.5f,  0.5f,    0.0f, 0.0f, 0.0f,    0.0f, 1.0f          // Top-Left
 };
-const u_int VERTEX_INDICES[] =
+const unsigned int VERTEX_INDICES[] =
 {
   0, 1, 3, // First Triangle
   1, 2, 3  // Second Triangle
@@ -32,14 +32,14 @@ private:
   bool handleEvent(SDL_Event e);
   void update();
   void render();
-  bool loadShader(std::string filename, u_int *id, int shaderFlag);
 
   SDL_Window *_window;
   SDL_GLContext _context;
-  u_int _vertextBufferObject;
-  u_int _vertexArrayObject;
-  u_int _elementBufferObject;
-  u_int _shaderProgram;
+  unsigned int _vertextBufferObject;
+  unsigned int _vertexArrayObject;
+  unsigned int _elementBufferObject;
+  unsigned int _shaderProgram;
+  unsigned int _textureId;
   bool _init = true;
 };
 
