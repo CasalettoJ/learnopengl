@@ -139,7 +139,6 @@ void Game::createVAO()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(VERTEX_INDICES), VERTEX_INDICES, GL_STATIC_DRAW);
     // Copy 
     /*
-     * Set up the single vertex attribute (aPos) in our vertex shader:
      * BASIC.VERT
      * 
      * in vec2 aPos
