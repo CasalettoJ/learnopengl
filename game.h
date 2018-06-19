@@ -7,11 +7,11 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float VERTICES[] = 
 {
-  // Position (XY)      Color (RGB)    Texture Coords (ST)
-   0.5f,  0.5f,    1.0f, 0.0f, 0.0f,    1.0f, 1.0f,         // Top-Right
-   0.5f, -0.5f,    0.0f, 1.0f, 0.0f,    1.0f, 0.0f,         // Bottom-Right
-  -0.5f, -0.5f,    0.0f, 0.0f, 1.0f,    0.0f, 0.0f,         // Bottom-Left
-  -0.5f,  0.5f,    0.0f, 0.0f, 0.0f,    0.0f, 1.0f          // Top-Left
+  // Position (XY)      Color (RGB)       Texture Coords (ST)
+   0.5f,  0.5f,       1.0f, 0.0f, 0.0f,    1.0f, 0.0f,         // Top-Right
+   0.5f, -0.5f,       0.0f, 1.0f, 0.0f,    1.0f, 1.0f,         // Bottom-Right
+  -0.5f, -0.5f,       0.0f, 0.0f, 1.0f,    0.0f, 1.0f,         // Bottom-Left
+  -0.5f,  0.5f,       1.0f, 0.0f, 1.0f,    0.0f, 0.0f          // Top-Left
 };
 const unsigned int VERTEX_INDICES[] =
 {

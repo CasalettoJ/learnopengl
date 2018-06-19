@@ -6,6 +6,10 @@
 #include <OpenGL/gl3.h>
 #include <OpenGL/gl3ext.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "game.h"
 #include "systems/shader/shader.h"
 #include "systems/media/texture.h"
@@ -111,8 +115,26 @@ void Game::render()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Create the transformation matrix
+    double seconds = SDL_GetTicks() / 1000.0;
+    glm::mat4 tfMatrix = glm::mat4(1.0f);
+    //tfMatrix = glm::translate(tfMatrix, glm::vec3(0.5f, -0.5f, 0.0f));
+    tfMatrix = glm::rotate(tfMatrix, (float)seconds*2, glm::vec3(6.0f, -6.0f, 3.0f));
+    tfMatrix = glm::scale(tfMatrix, glm::vec3(2.0f, 2.0f, 1.0f));
+
+
     // Use the shaderProgram created on initialization for vertex/fragment shaders
     glUseProgram(_shaderProgram);
+    // Transform!
+    int transform = glGetUniformLocation(_shaderProgram, "transform");
+    if (transform == -1)
+    {
+        std::cout << "Unable to location transform uniform." << std::endl;
+        // TODO: Logging and error handling
+    }
+    glUniformMatrix4fv(transform, 1, GL_FALSE, glm::value_ptr(tfMatrix));
+
+
     // Use our test texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _textureId);
@@ -152,6 +174,8 @@ void Game::createVAO()
      * in vec2 aTexCoord
      *      Coordinate mapping to supplied texture for vertex.
      * location: 2
+     * 
+     * uniform met4 transform
      * 
      *   __________     aPos (0)   aColor (1)   aTexCoord (2)
      *   | VERTEX |     X | Y      R | G | B    S | T
